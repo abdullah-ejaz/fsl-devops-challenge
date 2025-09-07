@@ -45,7 +45,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3 
 
       - name: Terraform init 
-        id: terraform
         run: |
           cd terraform
           terraform init \
@@ -59,6 +58,7 @@ jobs:
           terraform plan -var-file=./environments/${{ steps.env.outputs.environment }}.tfvars -out=tfplan
 
       - name: Terraform apply 
+        id: terraform
         run: |
           cd terraform
           terraform apply -auto-approve tfplan          
@@ -74,3 +74,22 @@ jobs:
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::991108593442:role/fsl-devops-oidc-role    
+
+
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v11
+        with:
+            github_token: ${{secrets.GITHUB_TOKEN}}
+            workflow: ci.yml
+            workflow_search: true
+            name: build-artifact-${{ github.ref_name }}
+
+      - name: Upload to s3
+        run: |
+            aws s3 sync s3://${{ needs.deploy-infra.outputs.hosting-bucket }} --delete  
+
+      - name: cache invalid
+        run: |
+            aws cloudfront create-invalidation \
+                --distribution-id ${{ needs.deploy-infra.outputs.cloudfront-id }} \
+                --paths "/"             
