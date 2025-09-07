@@ -83,6 +83,7 @@ jobs:
             workflow: ci.yml
             workflow_search: true
             name: build-artifact-${{ github.ref_name }}
+            path: build/
 
       - name: Upload to s3
         run: |
