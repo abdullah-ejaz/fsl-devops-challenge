@@ -1,0 +1,66 @@
+name: CI Pipeline
+
+on: 
+  push:
+    branches:
+      - main 
+      - devel
+      - stage
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+    outputs:
+      hosting-bucket: ${{ steps.terraform.outputs.hosting-bucket }}
+      cloudfront-id: ${{ steps.terraform.outputs.cloudfront-id }}
+      environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - name: Environment Passing
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "devel" ]]; then
+            echo "environment=dev"  >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref_name }}" == "stage" ]]; then
+            echo "environment=stage"  >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "environment=prod"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.0.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::991108593442:role/fsl-devops-oidc-role
+                
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v3 
+
+      - name: Terraform init 
+        id: terraform
+        run: |
+          cd terraform
+          terraform init \
+            -backend-config="bucket=fsl-devops-terraform-bucket" \
+            -backend-config="key=${{ steps.env.outputs.environment }}/infra.tfstate" \
+            -backend-config="region=us-east-1"
+
+      - name: Terraform plan 
+        run: |
+          cd terraform
+          terraform plan -var-file=./environments/${{ steps.env.outputs.environment }}.tfvars -out=tfplan
+
+      - name: Terraform apply 
+        run: |
+          cd terraform
+          terraform aaply -auto-approve tfplan          
+          echo "hosting-bucket=$(terraform output -raw s3_bucket)" >> $GITHUB_OUTPUT"
+          echo "cloudfront-id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT"

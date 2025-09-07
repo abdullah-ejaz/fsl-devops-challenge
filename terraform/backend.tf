@@ -1,6 +1,8 @@
 terraform {
   backend "s3" {
-    
+    bucket = "fsl-devops-terraform-bucket"
+    key    = "infra.tfstate"
+    region = "us-east-1"    
   }
   required_providers {
     aws = {
@@ -11,5 +13,5 @@ terraform {
 }
 
 provider "aws" {
-  # Configuration options
+ region = var.aws_region
 }
