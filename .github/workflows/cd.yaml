@@ -57,13 +57,13 @@ jobs:
           cd terraform
           terraform plan -var-file=./environments/${{ steps.env.outputs.environment }}.tfvars -out=tfplan
 
-      - name: Terraform apply 
-        id: terraform
-        run: |
-          cd terraform
-          terraform apply -auto-approve tfplan          
-          echo "hosting-bucket=$(terraform output -raw s3_bucket)" >> $GITHUB_OUTPUT"
-          echo "cloudfront-id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT"
+    #   - name: Terraform apply 
+    #     id: terraform
+    #     run: |
+    #       cd terraform
+    #       terraform apply -auto-approve tfplan          
+    #       echo "hosting-bucket=$(terraform output -raw s3_bucket)" >> $GITHUB_OUTPUT"
+    #       echo "cloudfront-id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT"
 
   deploy-app:
     runs-on: ubuntu-latest  
@@ -92,5 +92,5 @@ jobs:
       - name: cache invalid
         run: |
             aws cloudfront create-invalidation \
-                --distribution-id ${{ needs.deploy-infra.outputs.cloudfront-id }} \
+                --distribution-id E197LZ7ELSV0VC \
                 --paths "/"             
