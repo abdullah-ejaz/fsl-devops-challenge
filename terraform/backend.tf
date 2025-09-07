@@ -15,3 +15,5 @@ terraform {
 provider "aws" {
  region = var.aws_region
 }
+
+#         #    aws s3 sync s3://${{ needs.deploy-infra.outputs.hosting-bucket }}/  --delete  

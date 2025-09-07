@@ -87,8 +87,10 @@ jobs:
 
       - name: Upload to s3
         run: |
-            aws s3 sync s3://${{ needs.deploy-infra.outputs.hosting-bucket }}/  --delete  
+            aws s3 sync . s3://fsl-devops-dev-hosting-bucket \
+                --delete
 
+                
       - name: cache invalid
         run: |
             aws cloudfront create-invalidation \
