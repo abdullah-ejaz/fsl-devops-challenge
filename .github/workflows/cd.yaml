@@ -80,7 +80,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v11
         with:
             github_token: ${{secrets.GITHUB_TOKEN}}
-            workflow: ci.yml
+            workflow: ci.yaml
             workflow_search: true
             name: build-artifact-${{ github.ref_name }}
             path: build/
